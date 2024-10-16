@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/SawitProRecruitment/UserService/generated"
+	"github.com/ak9024/sawitpro/generated"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -47,11 +47,13 @@ func (s *Server) PostEstate(ctx echo.Context) error {
 	}
 
 	id := uuid.New().String()
+
 	newEstate := Estate{
 		ID:     id,
 		Width:  req.Width,
 		Length: req.Length,
 	}
+
 	estates[id] = newEstate
 
 	resp := generated.EstateResponse{
