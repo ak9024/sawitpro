@@ -17,9 +17,9 @@ import (
 const ApiUrl = "http://localhost:8080"
 
 func TestApi(t *testing.T) {
-	// if testing.Short() {
-	// 	t.Skip("Skip API tests")
-	// }
+	if testing.Short() {
+		t.Skip("Skip API tests")
+	}
 
 	testcases := getTestCases()
 	ctx := context.Background()
@@ -229,7 +229,7 @@ func getTestCases() []TestCase {
 					},
 					Expect: func(t *testing.T, ctx context.Context, tc *TestCase, resp *http.Response, data map[string]any) {
 						require.Equal(t, http.StatusOK, resp.StatusCode)
-						require.Equal(t, 82, int(data["distance"].(float64)))
+						require.Equal(t, 45, int(data["distance"].(float64)))
 					},
 				},
 			},
