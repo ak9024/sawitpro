@@ -64,6 +64,16 @@ If you change `database.sql` file, you need to reinitate the database by running
 ```
 docker compose down --volumes
 ```
+## Development
+
+For development i use [RustyWatch](https://github.com/ak9024/rustywatch)
+
+```shell
+# config ./rustywatch.yaml
+cargo install rustywatch
+rustywatch
+```
+
 
 ## Testing
 

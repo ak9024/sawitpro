@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/ak9024/sawitpro/generated"
+	"github.com/ak9024/sawitpro/repository"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
@@ -27,75 +28,80 @@ var trees = map[string][]Tree{}
 
 // handler for post new estate
 // POST /estate
-func (s *Server) PostEstate(ctx echo.Context) error {
+func (s *Server) PostEstate(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	var req generated.EstateRequest
 	var errResponse generated.ErrorResponse
 
-	if err := ctx.Bind(&req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		errResponse.Message = "Invalid request body"
-		return ctx.JSON(http.StatusBadRequest, errResponse)
+		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	if req.Width <= 0 || req.Width > 50000 {
-		errResponse.Message = "Invalid width"
-		return ctx.JSON(http.StatusBadRequest, errResponse)
-	}
-
-	if req.Length <= 0 || req.Length > 50000 {
-		errResponse.Message = "Invalid length"
-		return ctx.JSON(http.StatusBadRequest, errResponse)
-	}
-
+	// initialize new uuid
 	id := uuid.New().String()
 
-	newEstate := Estate{
-		ID:     id,
+	// insert estate to database
+	if _, err := s.Repository.CreateEstate(ctx, repository.Estate{
+		Id:     id,
 		Width:  req.Width,
 		Length: req.Length,
+	}); err != nil {
+		errResponse.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	estates[id] = newEstate
-
-	resp := generated.EstateResponse{
+	return c.JSON(http.StatusOK, generated.EstateResponse{
 		Id: id,
-	}
-
-	return ctx.JSON(http.StatusOK, resp)
+	})
 }
 
 // handler for store estate tree
 // POST /estate/<id>/tree
-func (s *Server) PostEstateIdTree(ctx echo.Context, id string) error {
+func (s *Server) PostEstateIdTree(c echo.Context, id string) error {
+	ctx := c.Request().Context()
+
 	var req generated.EstateTreeRequest
 	var errResponse generated.ErrorResponse
 
-	if err := ctx.Bind(&req); err != nil {
-		errResponse.Message = "Invalid request body"
-		return ctx.JSON(http.StatusBadRequest, errResponse)
+	if err := c.Bind(&req); err != nil {
+		errResponse.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	newTree := Tree{
-		ID:     id,
-		X:      req.X,
-		Y:      req.Y,
-		Height: req.Height,
+	treeID := uuid.New().String()
+
+	if _, err := s.Repository.CreateEstateTree(ctx, repository.EstateTree{
+		Id:       treeID,
+		EstateID: id,
+		X:        req.X,
+		Y:        req.Y,
+		Height:   req.Height,
+	}); err != nil {
+		errResponse.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	trees[id] = append(trees[id], newTree)
-
-	resp := generated.EstateTreeResponse{
-		Id: id,
-	}
-
-	return ctx.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusOK, generated.EstateTreeResponse{
+		Id: treeID,
+	})
 }
 
 // handler for get stats of the estate
 // GET /estate/<id>/stats
-func (s *Server) GetEstateIdStats(ctx echo.Context, id string) error {
-	var resp generated.EstateStatsResponse
+func (s *Server) GetEstateIdStats(c echo.Context, id string) error {
+	ctx := c.Request().Context()
 
-	estateTrees, exists := trees[id]
+	var resp generated.EstateStatsResponse
+	var errResponse generated.ErrorResponse
+
+	estateTrees, exists, err := s.Repository.GetEstateTreeById(ctx, id)
+	if err != nil {
+		errResponse.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, errResponse)
+	}
+
 	if exists || len(estateTrees) == 0 {
 		resp.Count = 0
 		resp.Max = 0
@@ -115,27 +121,36 @@ func (s *Server) GetEstateIdStats(ctx echo.Context, id string) error {
 	resp.Min = heights[0]
 	resp.Median = heights[count/2]
 
-	return ctx.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusOK, resp)
 }
 
 // handler for get drone plan
 // GET /estate/<id>/dron-plan
-func (s *Server) GetEstateIdDronePlan(ctx echo.Context, id string) error {
+func (s *Server) GetEstateIdDronePlan(c echo.Context, id string) error {
+	ctx := c.Request().Context()
+
 	var resp generated.EstateDronePlanResponse
 	var errResponse generated.ErrorResponse
 
-	estate, exists := estates[id]
+	estate, exists, err := s.Repository.GetEstateById(ctx, id)
+	if err != nil {
+		errResponse.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, errResponse)
+	}
+
 	if !exists {
 		errResponse.Message = "Estate not found"
-		return ctx.JSON(http.StatusBadRequest, errResponse)
+		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	estateTrees, exists := trees[id]
-	if !exists {
-		estateTrees = []Tree{}
+	// get trees base on estate_id from database
+	estateTrees, exists, err := s.Repository.GetEstateTreeById(ctx, id)
+	if err != nil {
+		errResponse.Message = err.Error()
+		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	// Formula zigzag pattern
+	// formula zigzag pattern
 	// horizontal = (width  - 1) x length + (length - 1) x width
 	horizontalDistance := (estate.Width-1)*estate.Length + (estate.Length-1)*estate.Width
 
@@ -152,5 +167,5 @@ func (s *Server) GetEstateIdDronePlan(ctx echo.Context, id string) error {
 	// total = horizontal + vertical
 	resp.Distance = horizontalDistance + verticalDistance
 
-	return ctx.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusOK, resp)
 }

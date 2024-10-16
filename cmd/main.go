@@ -17,6 +17,7 @@ func main() {
 	var server generated.ServerInterface = newServer()
 
 	generated.RegisterHandlers(e, server)
+
 	e.Use(middleware.Logger())
 	e.Logger.Fatal(e.Start(":8080"))
 }
@@ -26,8 +27,10 @@ func newServer() *handler.Server {
 	var repo repository.RepositoryInterface = repository.NewRepository(repository.NewRepositoryOptions{
 		Dsn: dbDsn,
 	})
+
 	opts := handler.NewServerOptions{
 		Repository: repo,
 	}
+
 	return handler.NewServer(opts)
 }
