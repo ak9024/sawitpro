@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 
@@ -84,7 +85,7 @@ func (s *Server) PostEstateIdTree(c echo.Context, id string) error {
 	}
 
 	return c.JSON(http.StatusOK, generated.EstateTreeResponse{
-		Id: treeID,
+		Id: id,
 	})
 }
 
@@ -107,6 +108,7 @@ func (s *Server) GetEstateIdStats(c echo.Context, id string) error {
 		resp.Max = 0
 		resp.Min = 0
 		resp.Median = 0
+		return c.JSON(http.StatusOK, resp)
 	}
 
 	heights := []int{}
@@ -115,11 +117,21 @@ func (s *Server) GetEstateIdStats(c echo.Context, id string) error {
 	}
 
 	sort.Ints(heights)
-	count := len(estateTrees)
+	count := len(heights)
 	resp.Count = count
-	resp.Max = heights[count-1]
-	resp.Min = heights[0]
-	resp.Median = heights[count/2]
+
+	// if count is exists or more than 0
+	// execute to calculate
+	if count > 0 {
+		resp.Max = heights[count-1]
+		resp.Min = heights[0]
+		// if count % 2 != 0, get median from heights[count/2]
+		if count%2 == 0 {
+			resp.Median = (heights[count/2-1] + heights[count/2]) / 2
+		} else {
+			resp.Median = heights[count/2]
+		}
+	}
 
 	return c.JSON(http.StatusOK, resp)
 }
@@ -129,7 +141,6 @@ func (s *Server) GetEstateIdStats(c echo.Context, id string) error {
 func (s *Server) GetEstateIdDronePlan(c echo.Context, id string) error {
 	ctx := c.Request().Context()
 
-	var resp generated.EstateDronePlanResponse
 	var errResponse generated.ErrorResponse
 
 	estate, exists, err := s.Repository.GetEstateById(ctx, id)
@@ -145,7 +156,7 @@ func (s *Server) GetEstateIdDronePlan(c echo.Context, id string) error {
 
 	// get trees base on estate_id from database
 	estateTrees, exists, err := s.Repository.GetEstateTreeById(ctx, id)
-	if err != nil {
+	if err != nil || len(estateTrees) == 0 {
 		errResponse.Message = err.Error()
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
@@ -156,6 +167,7 @@ func (s *Server) GetEstateIdDronePlan(c echo.Context, id string) error {
 
 	// set vertical distance of drone 0 meter above the ground
 	verticalDistance := 0
+
 	for _, tree := range estateTrees {
 		// for each tree the drone: tree height +1 meter.
 		verticalDistance += tree.Height
@@ -164,8 +176,7 @@ func (s *Server) GetEstateIdDronePlan(c echo.Context, id string) error {
 	// final distance, back to the ground
 	verticalDistance += 1
 
-	// total = horizontal + vertical
-	resp.Distance = horizontalDistance + verticalDistance
-
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusOK, generated.EstateDronePlanResponse{
+		Distance: horizontalDistance + verticalDistance,
+	})
 }
