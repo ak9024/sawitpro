@@ -4,11 +4,15 @@
 // interfaces using mockgen. See the Makefile for more information.
 package repository
 
-import "context"
+import (
+	"context"
+	"database/sql"
+)
 
 type RepositoryInterface interface {
 	CreateEstate(ctx context.Context, input Estate) (output Estate, err error)
 	CreateEstateTree(ctx context.Context, input EstateTree) (output EstateTree, err error)
-	GetEstateTreeById(ctx context.Context, id string) (output []EstateTree, exists bool, err error)
-	GetEstateById(ctx context.Context, id string) (output Estate, exists bool, err error)
+	GetStats(ctx context.Context, estateId string) (treeCount, maxHeight, minHeight int, medianHeight float64, err error)
+	GetEstateById(ctx context.Context, id string) (width, length int, err error)
+	GetTreesById(ctx context.Context, estateId string) (rows *sql.Rows, err error)
 }

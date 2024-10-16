@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"sort"
 
 	"github.com/ak9024/sawitpro/generated"
 	"github.com/ak9024/sawitpro/repository"
@@ -93,46 +92,20 @@ func (s *Server) PostEstateIdTree(c echo.Context, id string) error {
 func (s *Server) GetEstateIdStats(c echo.Context, id string) error {
 	ctx := c.Request().Context()
 
-	var resp generated.EstateStatsResponse
 	var errResponse generated.ErrorResponse
 
-	estateTrees, exists, err := s.Repository.GetEstateTreeById(ctx, id)
+	count, min, max, median, err := s.Repository.GetStats(ctx, id)
 	if err != nil {
 		errResponse.Message = err.Error()
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	if exists || len(estateTrees) == 0 {
-		resp.Count = 0
-		resp.Max = 0
-		resp.Min = 0
-		resp.Median = 0
-		return c.JSON(http.StatusOK, resp)
-	}
-
-	heights := []int{}
-	for _, tree := range estateTrees {
-		heights = append(heights, tree.Height)
-	}
-
-	sort.Ints(heights)
-	count := len(heights)
-	resp.Count = count
-
-	// if count is exists or more than 0
-	// execute to calculate
-	if count > 0 {
-		resp.Max = heights[count-1]
-		resp.Min = heights[0]
-		// if count % 2 != 0, get median from heights[count/2]
-		if count%2 == 0 {
-			resp.Median = (heights[count/2-1] + heights[count/2]) / 2
-		} else {
-			resp.Median = heights[count/2]
-		}
-	}
-
-	return c.JSON(http.StatusOK, resp)
+	return c.JSON(http.StatusOK, generated.EstateStatsResponse{
+		Count:  count,
+		Min:    min,
+		Max:    max,
+		Median: int(median),
+	})
 }
 
 // handler for get drone plan
@@ -142,34 +115,37 @@ func (s *Server) GetEstateIdDronePlan(c echo.Context, id string) error {
 
 	var errResponse generated.ErrorResponse
 
-	estate, exists, err := s.Repository.GetEstateById(ctx, id)
+	width, length, err := s.Repository.GetEstateById(ctx, id)
 	if err != nil {
 		errResponse.Message = err.Error()
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	if !exists {
-		errResponse.Message = "Estate not found"
-		return c.JSON(http.StatusBadRequest, errResponse)
-	}
-
 	// get trees base on estate_id from database
-	estateTrees, exists, err := s.Repository.GetEstateTreeById(ctx, id)
-	if err != nil || len(estateTrees) == 0 {
+	rows, err := s.Repository.GetTreesById(ctx, id)
+	if err != nil {
 		errResponse.Message = err.Error()
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	// formula zigzag pattern
+	defer rows.Close()
+
 	// horizontal = (width  - 1) x length + (length - 1) x width
-	horizontalDistance := (estate.Width-1)*estate.Length + (estate.Length-1)*estate.Width
+	horizontalDistance := (width-1)*length + (length-1)*width
 
 	// set vertical distance of drone 0 meter above the ground
 	verticalDistance := 0
 
-	for _, tree := range estateTrees {
-		// for each tree the drone: tree height +1 meter.
-		verticalDistance += tree.Height
+	for rows.Next() {
+		var height int
+
+		if err := rows.Scan(&height); err != nil {
+			errResponse.Message = err.Error()
+			return c.JSON(http.StatusInternalServerError, errResponse)
+		}
+
+		// for each tree the drone vertical distance increase +1 meter.
+		verticalDistance += height
 	}
 
 	// final distance, back to the ground

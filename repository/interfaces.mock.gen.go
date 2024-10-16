@@ -11,6 +11,7 @@ package repository
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
@@ -69,18 +70,51 @@ func (mr *MockRepositoryInterfaceMockRecorder) CreateEstateTree(ctx, input any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEstateTree", reflect.TypeOf((*MockRepositoryInterface)(nil).CreateEstateTree), ctx, input)
 }
 
-// GetEstateTreeById mocks base method.
-func (m *MockRepositoryInterface) GetEstateTreeById(ctx context.Context, id string) ([]EstateTree, bool, error) {
+// GetEstateById mocks base method.
+func (m *MockRepositoryInterface) GetEstateById(ctx context.Context, id string) (int, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEstateTreeById", ctx, id)
-	ret0, _ := ret[0].([]EstateTree)
-	ret1, _ := ret[1].(bool)
+	ret := m.ctrl.Call(m, "GetEstateById", ctx, id)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetEstateTreeById indicates an expected call of GetEstateTreeById.
-func (mr *MockRepositoryInterfaceMockRecorder) GetEstateTreeById(ctx, id any) *gomock.Call {
+// GetEstateById indicates an expected call of GetEstateById.
+func (mr *MockRepositoryInterfaceMockRecorder) GetEstateById(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEstateTreeById", reflect.TypeOf((*MockRepositoryInterface)(nil).GetEstateTreeById), ctx, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEstateById", reflect.TypeOf((*MockRepositoryInterface)(nil).GetEstateById), ctx, id)
+}
+
+// GetStats mocks base method.
+func (m *MockRepositoryInterface) GetStats(ctx context.Context, estateId string) (int, int, int, float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStats", ctx, estateId)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(int)
+	ret3, _ := ret[3].(float64)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
+}
+
+// GetStats indicates an expected call of GetStats.
+func (mr *MockRepositoryInterfaceMockRecorder) GetStats(ctx, estateId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStats", reflect.TypeOf((*MockRepositoryInterface)(nil).GetStats), ctx, estateId)
+}
+
+// GetTreesById mocks base method.
+func (m *MockRepositoryInterface) GetTreesById(ctx context.Context, estateId string) (*sql.Rows, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTreesById", ctx, estateId)
+	ret0, _ := ret[0].(*sql.Rows)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTreesById indicates an expected call of GetTreesById.
+func (mr *MockRepositoryInterfaceMockRecorder) GetTreesById(ctx, estateId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTreesById", reflect.TypeOf((*MockRepositoryInterface)(nil).GetTreesById), ctx, estateId)
 }

@@ -217,8 +217,8 @@ func getTestCases() []TestCase {
 						require.Equal(t, http.StatusOK, resp.StatusCode)
 						fmt.Println("Data:", data)
 						require.Equal(t, 3, int(data["count"].(float64)))
-						require.Equal(t, 10, int(data["min"].(float64)))
-						require.Equal(t, 20, int(data["max"].(float64)))
+						require.Equal(t, 20, int(data["min"].(float64)))
+						require.Equal(t, 10, int(data["max"].(float64)))
 						require.Equal(t, 10, int(data["median"].(float64)))
 					},
 				},

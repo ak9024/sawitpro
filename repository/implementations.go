@@ -5,6 +5,7 @@ import (
 	"database/sql"
 )
 
+// Create new estate
 func (r *Repository) CreateEstate(ctx context.Context, input Estate) (output Estate, err error) {
 	var id string
 	err = r.Db.QueryRowContext(ctx, InsertEstatesQuery,
@@ -20,6 +21,7 @@ func (r *Repository) CreateEstate(ctx context.Context, input Estate) (output Est
 	return
 }
 
+// Create new estate tree
 func (r *Repository) CreateEstateTree(ctx context.Context, input EstateTree) (output EstateTree, err error) {
 	var id string
 	err = r.Db.QueryRowContext(ctx, InsertEstateTreeQuery,
@@ -42,43 +44,25 @@ func (r *Repository) CreateEstateTree(ctx context.Context, input EstateTree) (ou
 	return
 }
 
-func (c *Repository) GetEstateTreeById(ctx context.Context, id string) (output []EstateTree, exists bool, err error) {
-	rows, err := c.Db.QueryContext(ctx, GetEstateTreeByIdQuery, id)
-	if err != nil {
-		return nil, false, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var tree EstateTree
-		err := rows.Scan(&tree.Id, &tree.EstateID, &tree.X, &tree.Y, &tree.Height)
-		if err != nil {
-			return nil, false, err
-		}
-		output = append(output, tree)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, false, err
-	}
-
-	if len(output) == 0 {
-		return nil, false, nil
-	}
-
-	return output, true, nil
+// Get stats from trees
+func (c *Repository) GetStats(ctx context.Context, estateId string) (treeCount, maxHeight, minHeight int, medianHeight float64, err error) {
+	err = c.Db.QueryRowContext(ctx, GetStatsQuery, estateId).Scan(
+		&treeCount,
+		&maxHeight,
+		&minHeight,
+		&medianHeight,
+	)
+	return
 }
 
-func (c *Repository) GetEstateById(ctx context.Context, id string) (output Estate, exists bool, err error) {
-	row := c.Db.QueryRowContext(ctx, GetEstateByIdQuery, id)
+// Get estate by id
+func (c *Repository) GetEstateById(ctx context.Context, id string) (width, length int, err error) {
+	err = c.Db.QueryRowContext(ctx, GetEstateByIdQuery, id).Scan(&width, &length)
+	return
+}
 
-	err = row.Scan(&output.Id, &output.Width, &output.Length)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return Estate{}, false, nil
-		}
-		return Estate{}, false, err
-	}
-
-	return output, true, nil
+// Get trees by id
+func (c *Repository) GetTreesById(ctx context.Context, estateId string) (rows *sql.Rows, err error) {
+	rows, err = c.Db.QueryContext(ctx, GetTreesByIdQuery, estateId)
+	return
 }
