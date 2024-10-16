@@ -1,0 +1,4 @@
+workspaces:
+  - dir: '.'
+    cmd: make
+    bin_path: 'build/main'
