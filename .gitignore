@@ -23,8 +23,6 @@ vendor/
 # Go workspace file
 go.work
 
-generated
-
-.vscode
+build/
 
 .DS_Store
