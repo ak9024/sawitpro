@@ -9,22 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Estate struct {
-	ID     string `json:"id"`
-	Width  int    `json:"width"`
-	Length int    `json:"length"`
-}
-
-type Tree struct {
-	ID     string `json:"id"`
-	X      int    `json:"x"`
-	Y      int    `json:"y"`
-	Height int    `json:"height"`
-}
-
-var estates = map[string]Estate{}
-var trees = map[string][]Tree{}
-
 // handler for post new estate
 // POST /estate
 func (s *Server) PostEstate(c echo.Context) error {
