@@ -48,7 +48,6 @@ func TestCreateEstate(t *testing.T) {
 				args           args
 				mockFunc       func()
 				wantStatusCode int
-				wantResp       generated.EstateResponse
 			}{
 				{
 					testiD:   1,
@@ -58,12 +57,42 @@ func TestCreateEstate(t *testing.T) {
 					},
 					mockFunc: func() {
 						mockRepository.EXPECT().CreateEstate(gomock.Any(), gomock.Any()).Return(repository.Estate{
-							Id:     "uuid",
+							Id:     "1",
 							Width:  10,
 							Length: 1,
 						}, nil)
 					},
 					wantStatusCode: http.StatusOK,
+				},
+				{
+					testiD:   2,
+					testDesc: "Failed - 400!",
+					args: args{
+						payload: `{  "width": 0, "length": 0 }`,
+					},
+					mockFunc: func() {
+						mockRepository.EXPECT().CreateEstate(gomock.Any(), gomock.Any()).Return(repository.Estate{
+							Id:     "1",
+							Width:  10,
+							Length: 1,
+						}, nil)
+					},
+					wantStatusCode: http.StatusBadRequest,
+				},
+				{
+					testiD:   3,
+					testDesc: "Failed - 400!",
+					args: args{
+						payload: `{  "width": 50001, "length": 0 }`,
+					},
+					mockFunc: func() {
+						mockRepository.EXPECT().CreateEstate(gomock.Any(), gomock.Any()).Return(repository.Estate{
+							Id:     "1",
+							Width:  10,
+							Length: 1,
+						}, nil)
+					},
+					wantStatusCode: http.StatusBadRequest,
 				},
 			}
 
@@ -86,7 +115,6 @@ func TestCreateEstate(t *testing.T) {
 
 					var resp generated.EstateResponse
 					_ = json.Unmarshal(rr.Body.Bytes(), &resp)
-					t.Log(tc.wantResp)
 					So(rr.Code, ShouldEqual, tc.wantStatusCode)
 				})
 			}
@@ -124,6 +152,28 @@ func TestCreateTree(t *testing.T) {
 					wantResp: generated.EstateTreeResponse{
 						Id: "uuid",
 					},
+				},
+				{
+					testiD:   2,
+					testDesc: "Failed - 400!",
+					args: args{
+						payload: `{  "x": "10", "y": 1, "height": 30 }`,
+					},
+					mockFunc: func() {
+						mockRepository.EXPECT().CreateEstateTree(gomock.Any(), gomock.Any()).Return(repository.EstateTree{}, nil)
+					},
+					wantStatusCode: http.StatusBadRequest,
+				},
+				{
+					testiD:   3,
+					testDesc: "Failed - 400!",
+					args: args{
+						payload: `{  "x": "10", "y": 1 }`,
+					},
+					mockFunc: func() {
+						mockRepository.EXPECT().CreateEstateTree(gomock.Any(), gomock.Any()).Return(repository.EstateTree{}, nil)
+					},
+					wantStatusCode: http.StatusBadRequest,
 				},
 			}
 

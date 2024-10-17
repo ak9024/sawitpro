@@ -67,6 +67,14 @@ func (s *Server) PostEstateIdTree(c echo.Context, id string) error {
 	}
 
 	treeID := uuid.New().String()
+	x := req.X
+	y := req.Y
+	height := req.Height
+
+	if x < 0 || y < 0 || height < 0 {
+		errResponse.Message = "Invalid payload"
+		return c.JSON(http.StatusBadRequest, errResponse)
+	}
 
 	if _, err := s.Repository.CreateEstateTree(ctx, repository.EstateTree{
 		Id:       treeID,
