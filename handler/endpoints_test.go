@@ -57,7 +57,11 @@ func TestCreateEstate(t *testing.T) {
 						payload: `{  "width": 10, "length": 1 }`,
 					},
 					mockFunc: func() {
-						mockRepository.EXPECT().CreateEstate(gomock.Any(), gomock.Any()).Return(repository.Estate{}, nil)
+						mockRepository.EXPECT().CreateEstate(gomock.Any(), gomock.Any()).Return(repository.Estate{
+							Id:     "uuid",
+							Width:  10,
+							Length: 1,
+						}, nil)
 					},
 					wantStatusCode: http.StatusOK,
 				},

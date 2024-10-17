@@ -33,8 +33,21 @@ func (s *Server) PostEstate(c echo.Context) error {
 	var req generated.EstateRequest
 	var errResponse generated.ErrorResponse
 
+	width := req.Width
+	length := req.Length
+
 	if err := c.Bind(&req); err != nil {
 		errResponse.Message = "Invalid request body"
+		return c.JSON(http.StatusBadRequest, errResponse)
+	}
+
+	if width > 50000 {
+		errResponse.Message = "Invalid width"
+		return c.JSON(http.StatusBadRequest, errResponse)
+	}
+
+	if length > 50000 {
+		errResponse.Message = "Invalid height"
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
@@ -44,8 +57,8 @@ func (s *Server) PostEstate(c echo.Context) error {
 	// insert estate to database
 	if _, err := s.Repository.CreateEstate(ctx, repository.Estate{
 		Id:     id,
-		Width:  req.Width,
-		Length: req.Length,
+		Width:  width,
+		Length: length,
 	}); err != nil {
 		errResponse.Message = "Error to create new estate"
 		return c.JSON(http.StatusBadRequest, errResponse)
