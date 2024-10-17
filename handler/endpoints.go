@@ -71,7 +71,7 @@ func (s *Server) PostEstateIdTree(c echo.Context, id string) error {
 	y := req.Y
 	height := req.Height
 
-	if x < 0 || y < 0 || height < 0 {
+	if x < 0 || y < 0 || height < 0 || height > 30 {
 		errResponse.Message = "Invalid payload"
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
