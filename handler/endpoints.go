@@ -25,12 +25,12 @@ func (s *Server) PostEstate(c echo.Context) error {
 	width := req.Width
 	length := req.Length
 
-	if width > 50000 {
+	if width <= 0 || width > 50000 {
 		errResponse.Message = "Invalid width"
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
-	if length > 50000 {
+	if length <= 0 || length > 50000 {
 		errResponse.Message = "Invalid height"
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
