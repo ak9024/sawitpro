@@ -17,13 +17,13 @@ func (s *Server) PostEstate(c echo.Context) error {
 	var req generated.EstateRequest
 	var errResponse generated.ErrorResponse
 
-	width := req.Width
-	length := req.Length
-
 	if err := c.Bind(&req); err != nil {
 		errResponse.Message = "Invalid request body"
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
+
+	width := req.Width
+	length := req.Length
 
 	if width > 50000 {
 		errResponse.Message = "Invalid width"
