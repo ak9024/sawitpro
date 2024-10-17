@@ -47,7 +47,7 @@ func (s *Server) PostEstate(c echo.Context) error {
 		Width:  req.Width,
 		Length: req.Length,
 	}); err != nil {
-		errResponse.Message = err.Error()
+		errResponse.Message = "Error to create new estate"
 		return c.JSON(http.StatusBadRequest, errResponse)
 	}
 
